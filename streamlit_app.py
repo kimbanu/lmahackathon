@@ -458,11 +458,16 @@ with st.sidebar:
 
 # Main content
 if page == "📊 Dashboard":
-    st.markdown('<p class="main-header">📊 Portfolio Dashboard</p>', unsafe_allow_html=True)
+    # Header with website link
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.markdown('<p class="main-header">📊 Portfolio Dashboard</p>', unsafe_allow_html=True)
+    with col2:
+        st.markdown('<p style="text-align: right; padding-top: 1rem;"><a href="https://covenantcommandcenter.com" target="_blank" style="color: #0066CC; text-decoration: none; font-weight: bold;">🌐 Visit Website</a></p>', unsafe_allow_html=True)
 
     # Show priority banner system
     show_dashboard_banner(db_path)
-    
+
     st.markdown("---")
 
     # Portfolio metrics
