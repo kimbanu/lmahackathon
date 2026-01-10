@@ -434,14 +434,6 @@ db_path = get_database_connection()
 
 # Sidebar
 with st.sidebar:
-    # Logo at top
-    try:
-        st.image("logo.png", use_container_width=True)
-    except:
-        st.markdown("### 🏦 Covenant Command Center")
-    
-    st.markdown("---")
-
     page = st.radio(
         "Navigation",
         ["📊 Dashboard", "📋 Covenant Status", "🔔 Alerts", "📂 Upload Data", "📈 Analytics"],
