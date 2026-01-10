@@ -10,6 +10,9 @@ import sqlite3
 import pandas as pd
 from datetime import datetime, timedelta
 import os
+import requests  # ← ADD THIS
+from PIL import Image  # ← ADD THIS
+from io import BytesIO  # ← ADD THIS
 
 # Page configuration
 st.set_page_config(
@@ -18,6 +21,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
 
 # Custom CSS for professional styling
 st.markdown("""
@@ -58,6 +62,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+with st.sidebar:
+    # Logo at top of sidebar
+    try:
+        import requests
+        from PIL import Image
+        from io import BytesIO
+
+        response = requests.get("https://covenantcommandcenter.com/logo.jpg")
+        logo = Image.open(BytesIO(response.content))
+        st.image(logo, use_container_width=True)
+    except:
+        # Fallback if logo fails to load
+        st.markdown("### 🏦 Covenant Command Center")
+
+    st.markdown("---")
 
 # Database connection
 @st.cache_resource
