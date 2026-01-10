@@ -10,9 +10,6 @@ import sqlite3
 import pandas as pd
 from datetime import datetime, timedelta
 import os
-import requests  # ← ADD THIS
-from PIL import Image  # ← ADD THIS
-from io import BytesIO  # ← ADD THIS
 
 # Page configuration
 st.set_page_config(
@@ -21,7 +18,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
 
 # Custom CSS for professional styling
 st.markdown("""
@@ -62,21 +58,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-with st.sidebar:
-    # Logo at top of sidebar
-    try:
-        import requests
-        from PIL import Image
-        from io import BytesIO
-
-        response = requests.get("https://covenantcommandcenter.com/logo.jpg")
-        logo = Image.open(BytesIO(response.content))
-        st.image(logo, use_container_width=True)
-    except:
-        # Fallback if logo fails to load
-        st.markdown("### 🏦 Covenant Command Center")
-
-    st.markdown("---")
 
 # Database connection
 @st.cache_resource
@@ -242,12 +223,207 @@ def get_portfolio_stats(db_path):
     }
 
 
+def get_banner_status(db_path):
+    """
+    Returns banner with DUAL priorities:
+    1. BREACH alerts (RED - highest priority)
+    2. UPLOAD REMINDERS (YELLOW/ORANGE - missing data)
+    3. UPCOMING TESTS (BLUE - next 7 days)
+    4. ALL GOOD (GREEN - everything compliant)
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    # Priority 1: Check for ACTIVE BREACHES
+    cursor.execute("""
+        SELECT COUNT(*) 
+        FROM covenants 
+        WHERE compliance_status = 'BREACH' AND is_active = 1
+    """)
+    breach_count = cursor.fetchone()[0]
+    
+    # Priority 2: Check for MISSING FINANCIAL DATA
+    cursor.execute("""
+        SELECT COUNT(*) 
+        FROM covenants 
+        WHERE is_active = 1 
+        AND (current_value IS NULL OR current_value = '' OR current_value = 'N/A')
+    """)
+    missing_data_count = cursor.fetchone()[0]
+    
+    # Priority 3: Get UPCOMING TESTS (simulated)
+    cursor.execute("""
+        SELECT 
+            l.deal_name,
+            c.covenant_name,
+            'Quarterly' as test_frequency
+        FROM covenants c
+        JOIN loan_agreements l ON c.loan_id = l.loan_id
+        WHERE c.is_active = 1
+        AND c.compliance_status != 'BREACH'
+        LIMIT 3
+    """)
+    upcoming_tests = cursor.fetchall()
+    
+    # Get 30-DAY UPCOMING TESTS
+    cursor.execute("""
+        SELECT 
+            l.deal_name,
+            c.covenant_name,
+            c.covenant_type
+        FROM covenants c
+        JOIN loan_agreements l ON c.loan_id = l.loan_id
+        WHERE c.is_active = 1
+        ORDER BY l.deal_name, c.covenant_name
+        LIMIT 10
+    """)
+    upcoming_30_days = cursor.fetchall()
+    
+    conn.close()
+    
+    # RETURN BANNER CONFIG
+    if breach_count > 0:
+        return {
+            'type': 'error',
+            'icon': '🚨',
+            'title': f'{breach_count} COVENANT BREACH(ES) REQUIRE IMMEDIATE ATTENTION',
+            'message': 'Review breaches immediately and contact your lender. Breach alerts are automatically generated when financial data is uploaded.',
+            'priority': 1,
+            'count': breach_count,
+            'upcoming_30': upcoming_30_days
+        }
+    
+    elif missing_data_count > 0:
+        return {
+            'type': 'warning',
+            'icon': '⚠️',
+            'title': f'{missing_data_count} COVENANT(S) MISSING FINANCIAL DATA - UPLOAD REQUIRED',
+            'message': 'Upload quarterly financial statements to enable automatic covenant testing and breach detection. System will calculate compliance immediately upon upload.',
+            'priority': 2,
+            'count': missing_data_count,
+            'upcoming_30': upcoming_30_days
+        }
+    
+    elif len(upcoming_tests) > 0:
+        return {
+            'type': 'info',
+            'icon': '📅',
+            'title': f'{len(upcoming_tests)} COVENANT TEST(S) DUE IN NEXT 7 DAYS',
+            'message': 'Prepare financial statements for upcoming covenant tests. Upload data early to ensure timely compliance monitoring.',
+            'priority': 3,
+            'upcoming_tests': upcoming_tests,
+            'upcoming_30': upcoming_30_days
+        }
+    
+    else:
+        next_upload_days = 25
+        return {
+            'type': 'success',
+            'icon': '✅',
+            'title': 'ALL COVENANTS IN COMPLIANCE - NO IMMEDIATE ACTION REQUIRED',
+            'message': f'Next financial data upload due in approximately {next_upload_days} days. System is actively monitoring all covenants.',
+            'priority': 4,
+            'upcoming_30': upcoming_30_days
+        }
+
+
+def show_dashboard_banner(db_path):
+    """Display the priority banner on dashboard"""
+    banner = get_banner_status(db_path)
+    
+    # Main banner
+    if banner['type'] == 'error':
+        st.error(f"### {banner['icon']} {banner['title']}")
+        st.markdown(f"**{banner['message']}**")
+        
+        with st.expander("🔍 View Breach Details"):
+            breach_query = """
+                SELECT 
+                    l.deal_name as 'Loan',
+                    c.covenant_name as 'Covenant',
+                    c.current_value as 'Current',
+                    c.threshold_text as 'Threshold'
+                FROM covenants c
+                JOIN loan_agreements l ON c.loan_id = l.loan_id
+                WHERE c.compliance_status = 'BREACH' AND c.is_active = 1
+            """
+            conn = sqlite3.connect(db_path)
+            breach_df = pd.read_sql_query(breach_query, conn)
+            conn.close()
+            st.dataframe(breach_df, use_container_width=True, hide_index=True)
+    
+    elif banner['type'] == 'warning':
+        st.warning(f"### {banner['icon']} {banner['title']}")
+        st.markdown(f"**{banner['message']}**")
+        
+        with st.expander("📋 View Covenants Missing Data"):
+            missing_query = """
+                SELECT 
+                    l.deal_name as 'Loan',
+                    c.covenant_name as 'Covenant',
+                    c.covenant_type as 'Type',
+                    c.threshold_text as 'Threshold'
+                FROM covenants c
+                JOIN loan_agreements l ON c.loan_id = l.loan_id
+                WHERE c.is_active = 1 
+                AND (c.current_value IS NULL OR c.current_value = '' OR c.current_value = 'N/A')
+            """
+            conn = sqlite3.connect(db_path)
+            missing_df = pd.read_sql_query(missing_query, conn)
+            conn.close()
+            st.dataframe(missing_df, use_container_width=True, hide_index=True)
+            st.info("💡 **Tip:** Go to '📂 Upload Data' to submit financial statements")
+    
+    elif banner['type'] == 'info':
+        st.info(f"### {banner['icon']} {banner['title']}")
+        st.markdown(f"**{banner['message']}**")
+        
+        with st.expander("📅 Upcoming Tests (Next 7 Days)"):
+            if 'upcoming_tests' in banner:
+                for loan, covenant, freq in banner['upcoming_tests']:
+                    days = 3
+                    test_date = (datetime.now() + timedelta(days=days)).strftime('%b %d, %Y')
+                    st.write(f"• **{loan}** - {covenant} ({freq}) - Due: {test_date}")
+    
+    else:
+        st.success(f"### {banner['icon']} {banner['title']}")
+        st.markdown(f"**{banner['message']}**")
+    
+    # ALWAYS SHOW: 30-Day Upcoming Tests
+    st.markdown("---")
+    st.markdown("### 📋 UPCOMING COVENANT TESTS (Next 30 Days)")
+    st.caption("Financial data uploads enable automatic covenant testing and breach alerts")
+    
+    if 'upcoming_30' in banner and banner['upcoming_30']:
+        upcoming_data = []
+        for i, (loan, covenant, cov_type) in enumerate(banner['upcoming_30']):
+            days_until = (i + 1) * 3
+            test_date = (datetime.now() + timedelta(days=days_until)).strftime('%b %d, %Y')
+            upcoming_data.append({
+                'Loan': loan,
+                'Covenant': covenant,
+                'Type': cov_type,
+                'Test Date': test_date,
+                'Days': f"{days_until} days"
+            })
+        
+        upcoming_df = pd.DataFrame(upcoming_data)
+        st.dataframe(upcoming_df, use_container_width=True, hide_index=True)
+    else:
+        st.info("No upcoming covenant tests scheduled")
+
+
 # Initialize database
 db_path = get_database_connection()
 
 # Sidebar
 with st.sidebar:
-    st.image("https://via.placeholder.com/150x50/0066CC/FFFFFF?text=Covenant+Center", use_container_width=True)
+    # Logo at top
+    try:
+        st.image("logo.png", use_container_width=True)
+    except:
+        st.markdown("### 🏦 Covenant Command Center")
+    
     st.markdown("---")
 
     page = st.radio(
@@ -276,33 +452,10 @@ with st.sidebar:
 if page == "📊 Dashboard":
     st.markdown('<p class="main-header">📊 Portfolio Dashboard</p>', unsafe_allow_html=True)
 
-    # Check for breaches
-    breach_query = """
-        SELECT l.deal_name, c.covenant_name, c.current_value, c.threshold_text
-        FROM covenants c
-        JOIN loan_agreements l ON c.loan_id = l.loan_id
-        WHERE c.compliance_status = 'BREACH' AND c.is_active = 1
-    """
-    breaches = load_data(db_path, breach_query)
-
-    if len(breaches) > 0:
-        st.markdown(f"""
-        <div class="breach-alert">
-            <h3>🚨 COVENANT BREACH ALERT: {len(breaches)} Active Breach(es)</h3>
-            <p>Immediate attention required!</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        for _, breach in breaches.iterrows():
-            st.error(
-                f"**{breach['deal_name']}** - {breach['covenant_name']}: {breach['current_value']} (Limit: {breach['threshold_text']})")
-    else:
-        st.markdown("""
-        <div class="success-banner">
-            <h3>✅ All Covenants Compliant</h3>
-            <p>No active breaches detected in your portfolio.</p>
-        </div>
-        """, unsafe_allow_html=True)
+    # Show priority banner system
+    show_dashboard_banner(db_path)
+    
+    st.markdown("---")
 
     # Portfolio metrics
     st.markdown("### 📈 Portfolio Overview")
