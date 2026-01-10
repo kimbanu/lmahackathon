@@ -72,7 +72,7 @@ with st.sidebar:
         # Fallback if logo fails to load
         st.markdown("### 🏦 Covenant Command Center")
 
-    st.markdown("---")
+    #st.markdown("---")
     
 
 # Database connection
