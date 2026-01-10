@@ -478,14 +478,14 @@ We are happy to provide **read-only access** to approved reviewers under NDA.
 ### Video Demo
 🎥 [Watch on YouTube](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
 
-### Live Demo
-🌐 [Try on Streamlit](https://covenantcommandcenter.streamlit.app)
+### Prototype
+🌐 [Try on Streamlit](https://kimbanu-lmahackathon.streamlit.app)
 
 ### Landing Page
 🏠 [covenantcommandcenter.com](https://covenantcommandcenter.com)
 
 ### DevPost Submission
-🏆 [View on DevPost](https://devpost.com/software/covenant-command-center)
+🏆 [View on DevPost](https://devpost.com/submit-to/27438-lma-edge-hackathon/manage/submissions/876007-covenant-command-center/project_details/edit)
 
 ---
 
