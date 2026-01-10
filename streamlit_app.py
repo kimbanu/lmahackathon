@@ -58,6 +58,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+with st.sidebar:
+    # Logo at top of sidebar
+    try:
+        import requests
+        from PIL import Image
+        from io import BytesIO
+
+        response = requests.get("https://covenantcommandcenter.com/logo.jpg")
+        logo = Image.open(BytesIO(response.content))
+        st.image(logo, use_container_width=True)
+    except:
+        # Fallback if logo fails to load
+        st.markdown("### 🏦 Covenant Command Center")
+
+    st.markdown("---")
+    
 
 # Database connection
 @st.cache_resource
