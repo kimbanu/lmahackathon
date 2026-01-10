@@ -67,7 +67,7 @@ with st.sidebar:
 
         response = requests.get("https://covenantcommandcenter.com/logo.jpg")
         logo = Image.open(BytesIO(response.content))
-        st.image(logo, use_container_width=True)
+        st.image(logo,  width=120)
     except:
         # Fallback if logo fails to load
         st.markdown("### 🏦 Covenant Command Center")
