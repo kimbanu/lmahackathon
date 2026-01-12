@@ -432,8 +432,10 @@ def show_dashboard_banner(db_path):
 # Initialize database
 db_path = get_database_connection()
 
-# AFTER - FIXED
-# Sidebar navigation (FIXED)
+# Initialize database
+db_path = get_database_connection()
+
+# Sidebar navigation (FIXED - single block, correct indentation)
 with st.sidebar:
     page = st.radio(
         "Navigation",
@@ -446,17 +448,6 @@ with st.sidebar:
             "📊 Analytics"
         ]
     )
-
-# Add this AFTER the page selection (around line 388)
-with st.sidebar:
-      page = st.radio("Navigation", [...])
-
-# Force scroll to top when page changes
-     st.markdown("""
-    <script>
-        window.parent.document.querySelector('section.main').scrollTo(0, 0);
-    </script>
-    """, unsafe_allow_html=True)    
     
     st.markdown("---")
     st.markdown("### 🎯 Quick Stats")
@@ -474,6 +465,18 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**Demo Version**")
     st.caption("Built for Hackathon 2026")
+
+# Force scroll to top when page changes (OUTSIDE sidebar)
+if 'last_page' not in st.session_state:
+    st.session_state.last_page = page
+
+if st.session_state.last_page != page:
+    st.session_state.last_page = page
+    st.markdown("""
+    <script>
+        window.parent.document.querySelector('section.main').scrollTo(0, 0);
+    </script>
+    """, unsafe_allow_html=True)
 
 
 # Main content
@@ -597,6 +600,7 @@ if page == "📊 Dashboard":
 
 elif page == "📄 Scan Loan Documents":
     # Header with website link
+    st.empty()  # ← ADD THIS LINE
     col1, col2 = st.columns([3, 1])
     with col1:
         st.markdown('<p class="main-header">📄 Scan Loan Documents</p>', unsafe_allow_html=True)
@@ -812,6 +816,7 @@ elif page == "📄 Scan Loan Documents":
     """, unsafe_allow_html=True)
 
 elif page == "📋 Covenant Status":
+    st.empty()  # ← ADD THIS LINE
     st.markdown('<p class="main-header">📋 Covenant Status</p>', unsafe_allow_html=True)
 
     # Filters
@@ -905,6 +910,7 @@ elif page == "📋 Covenant Status":
     )
 
 elif page == "🔔 Alerts":
+    st.empty()  # ← ADD THIS LINE    
     st.markdown('<p class="main-header">🔔 Alerts & Notifications</p>', unsafe_allow_html=True)
 
     # Alert summary
@@ -1004,6 +1010,7 @@ elif page == "🔔 Alerts":
                 """)
 
 elif page == "📂 Upload Data":
+    st.empty()  # ← ADD THIS LINE
     st.markdown('<p class="main-header">📂 Upload Financial Data</p>', unsafe_allow_html=True)
 
     st.info(
@@ -1090,6 +1097,7 @@ elif page == "📂 Upload Data":
                     st.error(f"🚨 {len(breaches)} covenant breach(es) detected! Alerts have been sent to stakeholders.")
 
 elif page == "📈 Analytics":
+    st.empty()  # ← ADD THIS LINE
     st.markdown('<p class="main-header">📈 Portfolio Analytics</p>', unsafe_allow_html=True)
 
     st.info("📊 Advanced analytics dashboard coming soon!")
