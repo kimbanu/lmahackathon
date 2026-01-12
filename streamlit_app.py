@@ -432,26 +432,28 @@ def show_dashboard_banner(db_path):
 # Initialize database
 db_path = get_database_connection()
 
-# Sidebar
+# AFTER - FIXED
+# Sidebar navigation (FIXED)
 with st.sidebar:
-    page = st.sidebar.radio(
-    "Navigation",
-    [
-        "📊 Dashboard", 
-        "📄 Scan Loan Documents",  # ← ADD THIS NEW PAGE
-        "📋 Covenant Status", 
-        "🚨 Alerts", 
-        "📤 Upload Data", 
-        "📊 Analytics"
-    ]
-    )    
-
+    page = st.radio(
+        "Navigation",
+        [
+            "📊 Dashboard", 
+            "📄 Scan Loan Documents",
+            "📋 Covenant Status", 
+            "🚨 Alerts", 
+            "📤 Upload Data", 
+            "📊 Analytics"
+        ]
+    )
+    
     st.markdown("---")
     st.markdown("### 🎯 Quick Stats")
     stats = get_portfolio_stats(db_path)
     st.metric("Total Loans", stats['total_loans'])
     st.metric("Active Breaches", stats['active_breaches'],
-              delta=None if stats['active_breaches'] == 0 else f"-{stats['active_breaches']}", delta_color="inverse")
+              delta=None if stats['active_breaches'] == 0 else f"-{stats['active_breaches']}", 
+              delta_color="inverse")
     st.metric("Compliance Rate", f"{stats['compliance']:.1f}%")
 
     st.markdown("---")
@@ -461,6 +463,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**Demo Version**")
     st.caption("Built for Hackathon 2026")
+
 
 # Main content
 if page == "📊 Dashboard":
