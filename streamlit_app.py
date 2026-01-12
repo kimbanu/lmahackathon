@@ -908,10 +908,15 @@ elif page == "📋 Covenant Status":
         file_name="covenant_status.csv",
         mime="text/csv"
     )
-
-elif page == "🔔 Alerts":
-    st.empty()  # ← ADD THIS LINE    
-    st.markdown('<p class="main-header">🔔 Alerts & Notifications</p>', unsafe_allow_html=True)
+    
+elif page == "🚨 Alerts":
+    # FORCE CLEAN SLATE
+    st.container()  # Create new container
+    
+    # Clear previous page content
+    st.markdown('<div id="alerts-page"></div>', unsafe_allow_html=True)
+    
+    st.markdown('<p class="main-header">🚨 Alerts & Notifications</p>', unsafe_allow_html=True)
 
     # Alert summary
     alerts_summary_query = """
@@ -925,12 +930,9 @@ elif page == "🔔 Alerts":
     summary = load_data(db_path, alerts_summary_query)
 
     col1, col2, col3 = st.columns(3)
-    breach_count = summary[summary['alert_type'] == 'BREACH']['count'].sum() if 'BREACH' in summary[
-        'alert_type'].values else 0
-    warning_count = summary[summary['alert_type'] == 'WARNING']['count'].sum() if 'WARNING' in summary[
-        'alert_type'].values else 0
-    info_count = summary[summary['alert_type'] == 'INFO']['count'].sum() if 'INFO' in summary[
-        'alert_type'].values else 0
+    breach_count = summary[summary['alert_type'] == 'BREACH']['count'].sum() if 'BREACH' in summary['alert_type'].values else 0
+    warning_count = summary[summary['alert_type'] == 'WARNING']['count'].sum() if 'WARNING' in summary['alert_type'].values else 0
+    info_count = summary[summary['alert_type'] == 'INFO']['count'].sum() if 'INFO' in summary['alert_type'].values else 0
 
     with col1:
         st.metric("🚨 Breach Alerts", int(breach_count))
@@ -943,12 +945,14 @@ elif page == "🔔 Alerts":
     alert_type_filter = st.multiselect(
         "Filter by Type",
         ["BREACH", "WARNING", "INFO", "CRITICAL"],
-        default=["BREACH", "WARNING"]
+        default=["BREACH", "WARNING"],
+        key="alerts_type_filter"  # ← ADD UNIQUE KEY
     )
 
     status_filter = st.selectbox(
         "Filter by Status",
-        ["All", "Active", "Resolved", "Dismissed"]
+        ["All", "Active", "Resolved", "Dismissed"],
+        key="alerts_status_filter"  # ← ADD UNIQUE KEY
     )
 
     # Build query
@@ -985,7 +989,7 @@ elif page == "🔔 Alerts":
     st.markdown(f"**Showing {len(alerts_df)} alert(s)**")
 
     # Display alerts as cards
-    for _, alert in alerts_df.iterrows():
+    for idx, alert in alerts_df.iterrows():
         with st.container():
             if alert['Type'] == 'BREACH':
                 st.error(f"""
