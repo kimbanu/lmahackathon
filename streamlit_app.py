@@ -1013,128 +1013,216 @@ elif page == "🚨 Alerts":
                 **Status:** {alert['Status']}
                 """)
 
-elif page == "📂 Upload Data":
-     # FORCE CLEAN SLATE
-    st.container()  # Create new container
-    
-    # Clear previous page content
-    st.markdown('<div id="alerts-page"></div>', unsafe_allow_html=True)
+elif page == "📤 Upload Data":
+    # FORCE CLEAN SLATE - same pattern as working Alerts page
+    with st.container():
+        # Clear previous page content
+        st.markdown('<div id="upload-page"></div>', unsafe_allow_html=True)
+        
+        st.markdown('<p class="main-header">📤 Upload Financial Data</p>', unsafe_allow_html=True)
 
-    st.markdown('<p class="main-header">📂 Upload Financial Data</p>', unsafe_allow_html=True)
+        st.info(
+            "This is a demo version. In the full application, you can upload quarterly financial statements to trigger covenant testing.")
 
-    st.info(
-        "This is a demo version. In the full application, you can upload quarterly financial statements to trigger covenant testing.")
+        # Loan selection
+        loan_query = "SELECT loan_id, deal_name, borrower_name FROM loan_agreements WHERE status = 'Active' ORDER BY deal_name"
+        loans = load_data(db_path, loan_query)
 
-    # Loan selection
-    loan_query = "SELECT loan_id, deal_name, borrower_name FROM loan_agreements WHERE status = 'Active' ORDER BY deal_name"
-    loans = load_data(db_path, loan_query)
+        selected_loan = st.selectbox(
+            "Select Loan",
+            loans['deal_name'].tolist(),
+            key="upload_loan_select"  # ← Add unique key
+        )
 
-    selected_loan = st.selectbox(
-        "Select Loan",
-        loans['deal_name'].tolist()
-    )
+        # Period selection
+        current_year = datetime.now().year
+        periods = [f"{year}-Q{q}" for year in range(current_year - 2, current_year + 1) for q in range(1, 5)]
+        selected_period = st.selectbox(
+            "Select Reporting Period", 
+            periods, 
+            index=len(periods) - 1,
+            key="upload_period_select"  # ← Add unique key
+        )
 
-    # Period selection
-    current_year = datetime.now().year
-    periods = [f"{year}-Q{q}" for year in range(current_year - 2, current_year + 1) for q in range(1, 5)]
-    selected_period = st.selectbox("Select Reporting Period", periods, index=len(periods) - 1)
+        # File upload
+        st.markdown("### 📎 Upload Financial Statement")
+        uploaded_file = st.file_uploader(
+            "Choose an Excel or CSV file", 
+            type=['xlsx', 'xls', 'csv'],
+            key="upload_file_uploader"  # ← Add unique key
+        )
 
-    # File upload
-    st.markdown("### Upload Financial Statement")
-    uploaded_file = st.file_uploader("Choose an Excel or CSV file", type=['xlsx', 'xls', 'csv'])
+        if uploaded_file is not None:
+            st.success(f"✅ File '{uploaded_file.name}' uploaded successfully!")
 
-    if uploaded_file is not None:
-        st.success(f"File '{uploaded_file.name}' uploaded successfully!")
+            # In real version, would parse file and extract financial metrics
+            st.markdown("### 📊 Financial Metrics (Demo)")
 
-        # In real version, would parse file and extract financial metrics
-        st.markdown("### Financial Metrics (Demo)")
+            col1, col2 = st.columns(2)
+            with col1:
+                total_debt = st.number_input(
+                    "Total Debt ($)", 
+                    value=45000000, 
+                    format="%d",
+                    key="upload_total_debt"  # ← Add unique key
+                )
+                ebitda = st.number_input(
+                    "EBITDA ($)", 
+                    value=8500000, 
+                    format="%d",
+                    key="upload_ebitda"  # ← Add unique key
+                )
+                interest_expense = st.number_input(
+                    "Interest Expense ($)", 
+                    value=3000000, 
+                    format="%d",
+                    key="upload_interest"  # ← Add unique key
+                )
 
-        col1, col2 = st.columns(2)
-        with col1:
-            total_debt = st.number_input("Total Debt ($)", value=45000000, format="%d")
-            ebitda = st.number_input("EBITDA ($)", value=8500000, format="%d")
-            interest_expense = st.number_input("Interest Expense ($)", value=3000000, format="%d")
+            with col2:
+                current_assets = st.number_input(
+                    "Current Assets ($)", 
+                    value=15000000, 
+                    format="%d",
+                    key="upload_current_assets"  # ← Add unique key
+                )
+                current_liabilities = st.number_input(
+                    "Current Liabilities ($)", 
+                    value=12000000, 
+                    format="%d",
+                    key="upload_current_liab"  # ← Add unique key
+                )
+                net_worth = st.number_input(
+                    "Net Worth ($)", 
+                    value=25000000, 
+                    format="%d",
+                    key="upload_net_worth"  # ← Add unique key
+                )
 
-        with col2:
-            current_assets = st.number_input("Current Assets ($)", value=15000000, format="%d")
-            current_liabilities = st.number_input("Current Liabilities ($)", value=12000000, format="%d")
-            net_worth = st.number_input("Net Worth ($)", value=25000000, format="%d")
+            if st.button("🔍 Calculate Covenants", type="primary", key="upload_calculate_btn"):
+                with st.spinner("Analyzing financial data and testing covenants..."):
+                    import time
+                    time.sleep(2)  # Simulate processing
 
-        if st.button("🔍 Calculate Covenants", type="primary"):
-            with st.spinner("Analyzing financial data and testing covenants..."):
-                import time
+                    st.success("✅ Covenant testing complete!")
 
-                time.sleep(2)  # Simulate processing
+                    # Show sample results
+                    st.markdown("### 📋 Covenant Test Results")
 
-                st.success("✅ Covenant testing complete!")
+                    leverage = total_debt / ebitda if ebitda > 0 else 0
+                    interest_coverage = ebitda / interest_expense if interest_expense > 0 else 0
+                    current_ratio = current_assets / current_liabilities if current_liabilities > 0 else 0
 
-                # Show sample results
-                st.markdown("### Covenant Test Results")
+                    results = [
+                        {
+                            "Covenant": "Maximum Leverage Ratio", 
+                            "Threshold": "≤ 4.50x", 
+                            "Actual": f"{leverage:.2f}x",
+                            "Status": "BREACH" if leverage > 4.5 else "COMPLIANT"
+                        },
+                        {
+                            "Covenant": "Minimum Interest Coverage", 
+                            "Threshold": "≥ 3.00x",
+                            "Actual": f"{interest_coverage:.2f}x",
+                            "Status": "BREACH" if interest_coverage < 3.0 else "COMPLIANT"
+                        },
+                        {
+                            "Covenant": "Minimum Current Ratio", 
+                            "Threshold": "≥ 1.20x", 
+                            "Actual": f"{current_ratio:.2f}x",
+                            "Status": "COMPLIANT" if current_ratio >= 1.2 else "AT_RISK"
+                        },
+                    ]
 
-                leverage = total_debt / ebitda if ebitda > 0 else 0
-                interest_coverage = ebitda / interest_expense if interest_expense > 0 else 0
-                current_ratio = current_assets / current_liabilities if current_liabilities > 0 else 0
+                    results_df = pd.DataFrame(results)
 
-                results = [
-                    {"Covenant": "Maximum Leverage Ratio", "Threshold": "≤ 4.50x", "Actual": f"{leverage:.2f}x",
-                     "Status": "BREACH" if leverage > 4.5 else "COMPLIANT"},
-                    {"Covenant": "Minimum Interest Coverage", "Threshold": "≥ 3.00x",
-                     "Actual": f"{interest_coverage:.2f}x",
-                     "Status": "BREACH" if interest_coverage < 3.0 else "COMPLIANT"},
-                    {"Covenant": "Minimum Current Ratio", "Threshold": "≥ 1.20x", "Actual": f"{current_ratio:.2f}x",
-                     "Status": "COMPLIANT" if current_ratio >= 1.2 else "AT_RISK"},
-                ]
+                    def highlight_status(row):
+                        if row['Status'] == 'BREACH':
+                            return ['background-color: #ffebee'] * len(row)
+                        elif row['Status'] == 'AT_RISK':
+                            return ['background-color: #fff3e0'] * len(row)
+                        else:
+                            return ['background-color: #e8f5e9'] * len(row)
 
-                results_df = pd.DataFrame(results)
+                    styled_results = results_df.style.apply(highlight_status, axis=1)
+                    st.dataframe(styled_results, use_container_width=True, hide_index=True)
 
+                    # Show breach alert if any
+                    breaches = results_df[results_df['Status'] == 'BREACH']
+                    if len(breaches) > 0:
+                        st.error(f"🚨 {len(breaches)} covenant breach(es) detected! Alerts have been sent to stakeholders.")
 
-                def highlight_status(row):
-                    if row['Status'] == 'BREACH':
-                        return ['background-color: #ffebee'] * len(row)
-                    elif row['Status'] == 'AT_RISK':
-                        return ['background-color: #fff3e0'] * len(row)
-                    else:
-                        return ['background-color: #e8f5e9'] * len(row)
-
-
-                styled_results = results_df.style.apply(highlight_status, axis=1)
-                st.dataframe(styled_results, use_container_width=True, hide_index=True)
-
-                # Show breach alert if any
-                breaches = results_df[results_df['Status'] == 'BREACH']
-                if len(breaches) > 0:
-                    st.error(f"🚨 {len(breaches)} covenant breach(es) detected! Alerts have been sent to stakeholders.")
-
-elif page == "📈 Analytics":
+elif page == "📊 Analytics":
     # FORCE CLEAN SLATE
-    st.container()  # Create new container
-    
-    # Clear previous page content
-    st.markdown('<div id="alerts-page"></div>', unsafe_allow_html=True)
+    with st.container():
+        # Clear previous page content
+        st.markdown('<div id="analytics-page"></div>', unsafe_allow_html=True)
+        
+        st.markdown('<p class="main-header">📊 Portfolio Analytics</p>', unsafe_allow_html=True)
 
-    st.markdown('<p class="main-header">📈 Portfolio Analytics</p>', unsafe_allow_html=True)
+        # Time period filter
+        time_period = st.selectbox(
+            "Time Period",
+            ["Last 30 Days", "Last 90 Days", "Last 6 Months", "Last Year", "All Time"],
+            key="analytics_time_period"  # ← Add unique key
+        )
 
-    st.info("📊 Advanced analytics dashboard coming soon!")
+        # Portfolio size metrics
+        st.markdown("### 📈 Portfolio Overview")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total Loans", "47", delta="3")
+        with col2:
+            st.metric("Total Exposure", "$2.8B", delta="$150M")
+        with col3:
+            st.metric("Avg. Loan Size", "$59.6M", delta="2%")
+        with col4:
+            st.metric("Active Covenants", "423", delta="12")
 
-    st.markdown("""
-    ### Planned Features:
-    - 📉 Trend analysis of covenant performance over time
-    - 🎯 Predictive breach warnings using machine learning
-    - 📊 Portfolio risk scoring
-    - 📈 Industry benchmark comparisons
-    - 📉 Waterfall charts for covenant movements
-    - 🗺️ Geographic risk heat maps
-    """)
+        # Covenant compliance trend
+        st.markdown("### 📉 Covenant Compliance Trend")
+        
+        trend_data = pd.DataFrame({
+            'Month': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            'Compliant': [95, 94, 96, 93, 95, 94],
+            'At Risk': [3, 4, 2, 5, 3, 4],
+            'Breach': [2, 2, 2, 2, 2, 2]
+        })
+        
+        st.line_chart(trend_data.set_index('Month'))
 
-    # Sample chart
-    st.markdown("### Covenant Compliance Trend (Sample)")
+        # Covenant type distribution
+        st.markdown("### 📊 Covenant Type Distribution")
+        
+        covenant_types = pd.DataFrame({
+            'Type': ['Leverage Ratio', 'Interest Coverage', 'Current Ratio', 'Net Worth', 'Debt Service Coverage'],
+            'Count': [89, 76, 68, 54, 46]
+        })
+        
+        st.bar_chart(covenant_types.set_index('Type'))
 
-    chart_data = pd.DataFrame({
-        'Quarter': ['2025-Q1', '2025-Q2', '2025-Q3', '2025-Q4', '2026-Q1'],
-        'Compliance Rate': [98, 97, 95, 94, 96]
-    })
+        # Top breaches by borrower
+        st.markdown("### 🚨 Breach Frequency by Borrower (Last 12 Months)")
+        
+        breach_data = pd.DataFrame({
+            'Borrower': ['ABC Corp', 'XYZ Industries', 'Tech Innovations Inc', '123 Manufacturing', 'Global Services LLC'],
+            'Total Breaches': [5, 4, 3, 3, 2],
+            'Current Status': ['At Risk', 'Compliant', 'At Risk', 'Compliant', 'Compliant']
+        })
+        
+        st.dataframe(breach_data, use_container_width=True, hide_index=True)
 
-    st.line_chart(chart_data.set_index('Quarter'))
+        # Export options
+        st.markdown("### 📥 Export Analytics")
+        
+        export_col1, export_col2 = st.columns(2)
+        with export_col1:
+            if st.button("📊 Export to Excel", key="analytics_export_excel"):
+                st.success("Excel report generated! (Demo mode)")
+        with export_col2:
+            if st.button("📄 Generate PDF Report", key="analytics_export_pdf"):
+                st.success("PDF report generated! (Demo mode)")
 
 # Footer
 st.markdown("---")
