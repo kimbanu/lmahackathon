@@ -780,7 +780,7 @@ elif page == "📄 Scan Loan Documents":
     
     st.markdown("""
     ### Real-World Results:
-    - **500-page stress test**: 8 covenants in 10 minutes
+    - **500-page stress test**: 8 covenants in 60 minutes on low Wifi
     - **Footnote saved $271K**: Detected subordinated debt exclusion
     - **Table parsing**: Extracted springing covenant thresholds
     - **Amendment tracking**: Found 3 modifications across 5 amendments
