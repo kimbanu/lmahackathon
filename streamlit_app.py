@@ -1014,7 +1014,12 @@ elif page == "🚨 Alerts":
                 """)
 
 elif page == "📂 Upload Data":
-    st.empty()  # ← ADD THIS LINE
+     # FORCE CLEAN SLATE
+    st.container()  # Create new container
+    
+    # Clear previous page content
+    st.markdown('<div id="alerts-page"></div>', unsafe_allow_html=True)
+
     st.markdown('<p class="main-header">📂 Upload Financial Data</p>', unsafe_allow_html=True)
 
     st.info(
@@ -1101,7 +1106,12 @@ elif page == "📂 Upload Data":
                     st.error(f"🚨 {len(breaches)} covenant breach(es) detected! Alerts have been sent to stakeholders.")
 
 elif page == "📈 Analytics":
-    st.empty()  # ← ADD THIS LINE
+    # FORCE CLEAN SLATE
+    st.container()  # Create new container
+    
+    # Clear previous page content
+    st.markdown('<div id="alerts-page"></div>', unsafe_allow_html=True)
+
     st.markdown('<p class="main-header">📈 Portfolio Analytics</p>', unsafe_allow_html=True)
 
     st.info("📊 Advanced analytics dashboard coming soon!")
