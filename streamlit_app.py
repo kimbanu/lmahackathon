@@ -446,6 +446,17 @@ with st.sidebar:
             "📊 Analytics"
         ]
     )
+
+# Add this AFTER the page selection (around line 388)
+with st.sidebar:
+    page = st.radio("Navigation", [...])
+
+# Force scroll to top when page changes
+st.markdown("""
+<script>
+    window.parent.document.querySelector('section.main').scrollTo(0, 0);
+</script>
+""", unsafe_allow_html=True)    
     
     st.markdown("---")
     st.markdown("### 🎯 Quick Stats")
