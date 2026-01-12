@@ -434,11 +434,17 @@ db_path = get_database_connection()
 
 # Sidebar
 with st.sidebar:
-    page = st.radio(
-        "Navigation",
-        ["📊 Dashboard", "📋 Covenant Status", "🔔 Alerts", "📂 Upload Data", "📈 Analytics"],
-        label_visibility="collapsed"
-    )
+    page = st.sidebar.radio(
+    "Navigation",
+    [
+        "📊 Dashboard", 
+        "📄 Scan Loan Documents",  # ← ADD THIS NEW PAGE
+        "📋 Covenant Status", 
+        "🚨 Alerts", 
+        "📤 Upload Data", 
+        "📊 Analytics"
+    ]
+    )    
 
     st.markdown("---")
     st.markdown("### 🎯 Quick Stats")
@@ -574,6 +580,222 @@ if page == "📊 Dashboard":
                 st.info(f"**{alert['Loan']}** - {alert['Message']}")
     else:
         st.info("No recent alerts")
+
+elif page == "📄 Scan Loan Documents":
+    # Header with website link
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.markdown('<p class="main-header">📄 Scan Loan Documents</p>', unsafe_allow_html=True)
+    with col2:
+        st.markdown(
+            '<p style="text-align: right; padding-top: 1rem;">'
+            '<a href="https://covenantcommandcenter.com" target="_blank" '
+            'style="color: #0066CC; text-decoration: none; font-weight: bold;">'
+            '🌐 Visit Website</a></p>',
+            unsafe_allow_html=True
+        )
+    
+    # Demo banner
+    st.info("🎯 **DEMO MODE**: Upload functionality shown for demonstration. In production, documents are processed and saved to your portfolio.")
+    
+    # Introduction
+    st.markdown("""
+    ### AI-Powered Covenant Extraction
+    
+    Upload a loan agreement to see our AI extract covenants in real-time with **zero hallucinations**.
+    Our system reads every page including tables, footnotes, and handwritten amendments.
+    """)
+    
+    st.markdown("---")
+    
+    # Upload section (demo only)
+    st.markdown("### 📎 Upload Document")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        uploaded_file = st.file_uploader(
+            "Choose a PDF or DOCX file",
+            type=['pdf', 'docx'],
+            help="Demo mode: File will not be processed"
+        )
+        
+        if uploaded_file:
+            st.success(f"✅ File selected: {uploaded_file.name} ({uploaded_file.size:,} bytes)")
+            st.info("💡 **Demo Mode**: In production, this would extract covenants and add to your portfolio.")
+    
+    with col2:
+        st.markdown("""
+        **Supported formats:**
+        - ✅ PDF files
+        - ✅ Word documents
+        - ✅ Scanned images
+        - ✅ Up to 500 pages
+        """)
+    
+    # Demo extraction button
+    if uploaded_file:
+        if st.button("🚀 Start Extraction (Demo)", type="primary"):
+            with st.spinner("Extracting covenants..."):
+                import time
+                time.sleep(2)
+                
+                st.success("✅ Extraction complete! (Demo)")
+                
+                st.markdown("#### Sample Results:")
+                results_data = {
+                    "Covenant Name": [
+                        "Maximum Total Net Leverage Ratio",
+                        "Minimum Interest Coverage Ratio", 
+                        "Minimum EBITDA",
+                        "Maximum Capital Expenditures"
+                    ],
+                    "Threshold": ["≤ 4.50x", "≥ 3.00x", "≥ $5,000,000", "≤ $10,000,000"],
+                    "Type": ["Financial", "Financial", "Financial", "Financial"],
+                    "Source": ["AI Vision", "AI Vision", "String Search", "String Search"]
+                }
+                
+                results_df = pd.DataFrame(results_data)
+                st.dataframe(results_df, use_container_width=True)
+                
+                st.info("💡 In production, these covenants would be saved to your portfolio.")
+    
+    st.markdown("---")
+    
+    # How it works
+    st.markdown("## 🤖 How It Works")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        <div style="text-align: center; padding: 20px; background: #f0f8ff; border-radius: 10px;">
+            <h3>1️⃣ AI Vision</h3>
+            <p><strong>GPT-4o Extraction</strong></p>
+            <p>Reads tables, footnotes, amendments</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div style="text-align: center; padding: 20px; background: #f0fff0; border-radius: 10px;">
+            <h3>2️⃣ Mapping Table</h3>
+            <p><strong>177 Terms</strong></p>
+            <p>Normalizes covenant names</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div style="text-align: center; padding: 20px; background: #fff5ee; border-radius: 10px;">
+            <h3>3️⃣ Zero Hallucinations</h3>
+            <p><strong>Evidence-Based</strong></p>
+            <p>Validates accuracy</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Competitive advantage
+    st.markdown("## 🏆 Competitive Advantage")
+    
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 15px; color: white; margin: 20px 0;">
+        <h3 style="color: white; margin-top: 0;">Why We're Different</h3>
+        <p style="font-size: 18px;">Traditional monitoring: <strong>$100/document</strong> manual review, 2-3 days. 
+        <br>We deliver: <strong>10 minutes</strong>, zero missed covenants, <strong>full user control</strong>.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    comparison_data = {
+        "Feature": ["Extraction", "Cost/Doc", "Time", "Footnotes", "Accuracy", "Control"],
+        "Traditional": ["❌ Manual", "$100", "2-3 days", "❌ Missed", "~85%", "❌ Black box"],
+        "Our Platform": ["✅ AI + Human", "$25*", "10 min", "✅ Detected", "~95%", "✅ Full transparency"]
+    }
+    st.dataframe(pd.DataFrame(comparison_data), use_container_width=True, hide_index=True)
+    st.caption("*Based on $2,500/month unlimited")
+    
+    st.markdown("---")
+    
+    # USPTO innovation
+    st.markdown("## 🎓 Patent-Pending Innovation")
+    
+    st.markdown("""
+    <div style="background: #f8f9fa; padding: 25px; border-left: 5px solid #0066cc; border-radius: 5px;">
+        <h3 style="color: #0066cc; margin-top: 0;">USPTO-Worthy Technology</h3>
+        <ul style="font-size: 16px; line-height: 1.8;">
+            <li><strong>Multi-Modal AI Vision</strong>: First covenant extractor using GPT-4 Vision</li>
+            <li><strong>Proprietary Mapping</strong>: 177-term database (36 hours curation)</li>
+            <li><strong>Zero-Hallucination Protocol</strong>: Returns null when uncertain (industry-first)</li>
+            <li><strong>Hierarchical Authority</strong>: Prioritizes table > footnotes > main text</li>
+            <li><strong>Real-Time Breach Detection</strong>: Immediate alerts upon upload</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # User control
+    st.markdown("## 🔐 Full User Control")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        ### What You See:
+        - ✅ Every covenant + source
+        - ✅ AI confidence scores
+        - ✅ Match type (AI/String)
+        - ✅ Full text context
+        - ✅ Audit trail
+        """)
+    
+    with col2:
+        st.markdown("""
+        ### What You Control:
+        - ✅ Review/approve extractions
+        - ✅ Override AI decisions
+        - ✅ Add manual covenants
+        - ✅ Customize alerts
+        - ✅ Export anytime
+        """)
+    
+    st.info("💡 **Unlike competitors' black box review, you see exactly how each covenant was extracted.**")
+    
+    st.markdown("---")
+    
+    # Impact
+    st.markdown("## 💰 Business Impact")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Time Savings", "100hrs → 10min", "99% faster")
+    
+    with col2:
+        st.metric("Cost Savings", "$271K/year", "Per avoided breach")
+    
+    with col3:
+        st.metric("Accuracy", "95%+", "Zero missed")
+    
+    st.markdown("""
+    ### Real-World Results:
+    - **500-page stress test**: 8 covenants in 10 minutes
+    - **Footnote saved $271K**: Detected subordinated debt exclusion
+    - **Table parsing**: Extracted springing covenant thresholds
+    - **Amendment tracking**: Found 3 modifications across 5 amendments
+    """)
+    
+    st.markdown("---")
+    
+    # CTA
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; border-radius: 15px; color: white; text-align: center;">
+        <h2 style="color: white;">Ready to Transform Covenant Monitoring?</h2>
+        <p style="font-size: 18px;">Beta: <strong>$99/month lifetime</strong> (normally $999/month)</p>
+        <p>🚀 Built in 21 days with AI | 🏆 Hackathon 2026 Finalist</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 elif page == "📋 Covenant Status":
     st.markdown('<p class="main-header">📋 Covenant Status</p>', unsafe_allow_html=True)
